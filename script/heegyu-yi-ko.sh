@@ -1,13 +1,14 @@
+
 export CUDA_VISIBLE_DEVICES=1
 
-model_id="42dot/42dot_LLM-SFT-1.3B"
-peft="heegyu/42dot-SFT-DPO-v0.1"
+model_id="beomi/Yi-Ko-6B"
+peft="heegyu/Yi-ko-6B-OKI-v20231124-2e-5"
 
 test() {
     peft_rev=$1
     helpful="data/$peft-$peft_rev/gpt4evol.json"
     safety="data/$peft-$peft_rev/ko-ethical-questions.json"
-    batch_size=4
+    batch_size=1
 
     python generate.py \
         --model_id $model_id \
@@ -42,6 +43,6 @@ test() {
         --filename $safety
 }
 
-test "steps-63332"
-# test "steps-126664"
-test "steps-189996"
+test "epoch-1"
+test "epoch-2"
+test "epoch-3"

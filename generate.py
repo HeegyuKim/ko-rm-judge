@@ -1,5 +1,5 @@
 import fire
-from typing import Optional
+from typing import Optional, List
 import jsonlines
 import os
 from tqdm import tqdm
@@ -10,6 +10,7 @@ from transformers import (
     AutoModelForCausalLM,
     DataCollatorForLanguageModeling,
     AutoConfig,
+    StoppingCriteria,
 )
 from prompt_templates import PROMPT_TEMPLATES
 from question_datasets import DATASETS
@@ -35,6 +36,16 @@ def build_model_types(dtype: str, device: str, parallelize: bool):
     else:
         return {"torch_dtype": DTYPES[dtype], "device_map": device}
 
+class EosListStoppingCriteria(StoppingCriteria):
+    def __init__(self, tokenizer, eos_list: List[str]):
+        self.eos_list = [tokenizer.encode(x) for x in eos_list]
+
+    def __call__(self, input_ids: torch.LongTensor, scores: torch.FloatTensor, **kwargs) -> bool:
+        for eos_sequence in self.eos_list:
+            last_ids = input_ids[:,-len(eos_sequence):].tolist()
+            if self.eos_sequence in last_ids:
+                return True
+        return False
 
 @torch.no_grad()
 def main(
@@ -57,6 +68,8 @@ def main(
     top_p: float = 1.0,
     top_k: Optional[int] = None,
     max_new_tokens: Optional[int] = 512,
+    additional_eos: Optional[str] = None,
+    print_generation: bool = True
 ):
     if output_filename is None:
         output_filename = f"data/{testset}-" + model_id.replace("/", "__") + ".json"
@@ -107,6 +120,9 @@ def main(
         max_new_tokens=max_new_tokens,
         temperature=temperature,
     )
+    if additional_eos:
+        gen_args["stopping_criteria"] = EosListStoppingCriteria(tokenizer, [additional_eos])
+
     model_args = dict(
         model_id=model_id,
         model_revision=model_revision,
@@ -147,7 +163,10 @@ def main(
 
             prompt_len = inputs["input_ids"].shape[1]
             responses = model.generate(**inputs, **gen_args).cpu()
-            print(tokenizer.batch_decode(responses, skip_special_tokens=True))
+            if print_generation:
+                for full_output in tokenizer.batch_decode(responses, skip_special_tokens=True):
+                    print(full_output)
+
             responses = responses[:, prompt_len:]
             responses = tokenizer.batch_decode(responses, skip_special_tokens=True)
 

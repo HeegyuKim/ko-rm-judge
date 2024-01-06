@@ -19,4 +19,5 @@ PROMPT_TEMPLATES = {
     "midm": TEMPLATE_MIDM,
     "kullm-no-input": TEMPLATE_KULLM_NO_INPUT,
     "nlpai-lab/kullm-polyglot-12.8b-v3": TEMPLATE_KULLM_NO_INPUT,
+    "nlpai-lab/kullm-polyglot-5.8b-v2": TEMPLATE_KULLM_NO_INPUT,
 }

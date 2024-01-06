@@ -42,6 +42,7 @@ def main(
     name: str,
     reward_model_id: str,
     testset: str,
+    filename: Optional[int] = None,
     device: str = "auto",
     batch_size: int = 1,
     dtype: str = "float16",
@@ -75,7 +76,14 @@ def main(
     )
 
     device = model.device
-    reward_output_filename = os.path.join(os.path.dirname(filename), os.path.basename(filename) + f"_{name}.json")
+    if filename:
+        reward_output_filename = filename
+    else:
+        reward_output_filename = os.path.join("data/GT", f"{testset}_{name}.json")
+
+    dirname = os.path.dirname(reward_output_filename)
+    if dirname:
+        os.makedirs(dirname, exist_ok=True)
 
     dataset = DATASETS[testset]()
 
@@ -98,6 +106,9 @@ def main(
         for i in range(0, len(dataset), batch_size):
             if i < skip_lines:
                 continue
+            if i >= limit:
+                print(f"{limit} 제한으로 중단합니다.")
+                break
             
             # 우선 아이템들을 인코딩합니다.
             end_i = min(dataset_len, i + batch_size)

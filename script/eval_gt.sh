@@ -1,16 +1,17 @@
+export CUDA_VISIBLE_DEVICES=1
 
-helpful="data/GT/gpt4evol-helpful.json"
-safety="data/GT/ko-ethical-questions-safety.json"
 batch_size=4
 
-python eval.py \
+python eval_gt.py \
     --name helpful \
-    --reward_model_id heegyu/ko-reward-model-helpful-1.3b-v0.2 \
+    --testset gpt4evol \
+    --reward_model_id "heegyu/ko-reward-model-helpful-1.3b-v0.2" \
     --batch_size $batch_size \
-    --filename $helpful
+    --limit 100
 
-python eval.py \
+python eval_gt.py \
     --name safety \
-    --reward_model_id heegyu/ko-reward-model-safety-1.3b-v0.2 \
+    --testset ko-ethical-questions \
+    --reward_model_id "heegyu/ko-reward-model-safety-1.3b-v0.2" \
     --batch_size $batch_size \
-    --filename $safety
+    --limit 100

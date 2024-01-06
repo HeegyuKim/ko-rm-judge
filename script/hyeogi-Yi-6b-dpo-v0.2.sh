@@ -1,8 +1,6 @@
-
-
-model_id="logicker/SkkuDataScience-10.7B-v5"
-helpful="data/logicker/SkkuDataScience-10.7B-v5/gpt4evol.json"
-safety="data/logicker/SkkuDataScience-10.7B-v5/ko-ethical-questions.json"
+model_id="hyeogi/Yi-6b-dpo-v0.2"
+helpful="data/$model_id/gpt4evol.json"
+safety="data/$model_id/ko-ethical-questions.json"
 batch_size=1
 
 python generate.py \
@@ -10,7 +8,7 @@ python generate.py \
     --testset gpt4evol \
     --batch_size $batch_size \
     --output_filename $helpful \
-    --prompt_template zephyr \
+    --prompt_template vicuna \
     --limit 100 
 
 python generate.py \
@@ -18,7 +16,7 @@ python generate.py \
     --testset ko-ethical-questions \
     --batch_size $batch_size \
     --output_filename $safety \
-    --prompt_template zephyr \
+    --prompt_template vicuna \
     --limit 100 
 
 python eval.py \

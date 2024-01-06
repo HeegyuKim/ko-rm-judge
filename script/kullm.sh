@@ -1,24 +1,24 @@
-
-
-model_id="logicker/SkkuDataScience-10.7B-v5"
-helpful="data/logicker/SkkuDataScience-10.7B-v5/gpt4evol.json"
-safety="data/logicker/SkkuDataScience-10.7B-v5/ko-ethical-questions.json"
+model_id="nlpai-lab/kullm-polyglot-12.8b-v3"
+helpful="data/$model_id/gpt4evol.json"
+safety="data/$model_id/ko-ethical-questions.json"
 batch_size=1
 
 python generate.py \
     --model_id $model_id \
+    --tokenizer_id EleutherAI/polyglot-ko-12.8b \
     --testset gpt4evol \
     --batch_size $batch_size \
     --output_filename $helpful \
-    --prompt_template zephyr \
+    --trust_remote_code \
     --limit 100 
 
 python generate.py \
     --model_id $model_id \
+    --tokenizer_id EleutherAI/polyglot-ko-12.8b \
     --testset ko-ethical-questions \
     --batch_size $batch_size \
     --output_filename $safety \
-    --prompt_template zephyr \
+    --trust_remote_code \
     --limit 100 
 
 python eval.py \

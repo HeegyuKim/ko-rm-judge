@@ -74,7 +74,7 @@ def main(
     )
 
     device = model.device
-    reward_output_filename = os.path.join(os.path.dirname(filename), os.path.basename(filename) + f"_{name}.json")
+    reward_output_filename = os.path.join(os.path.dirname(filename), os.path.splitext(filename)[0] + f"_{name}.json")
 
     with jsonlines.open(filename) as fin:
         dataset = list(fin)

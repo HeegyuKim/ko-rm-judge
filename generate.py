@@ -47,8 +47,10 @@ def main(
     limit: Optional[int] = None,
     prompt_template: Optional[str] = None,
     model_revision: Optional[str] = None,
+    tokenizer_id: Optional[str] = None,
     peft_model_id: Optional[str] = None,
     peft_model_revision: Optional[str] = None,
+    trust_remote_code: bool = False,
 
     do_sample=True,
     temperature: float = 1.0,
@@ -70,8 +72,8 @@ def main(
     if device == "auto":
        device = "cuda:0" if torch.cuda.is_available() else "cpu"
 
-    tokenizer = AutoTokenizer.from_pretrained(model_id, revision=model_revision, padding_side="left")
-    model = AutoModelForCausalLM.from_pretrained(model_id, revision=model_revision, **build_model_types(dtype, device)).eval()
+    tokenizer = AutoTokenizer.from_pretrained(tokenizer_id or model_id, revision=model_revision, padding_side="left", trust_remote_code=trust_remote_code)
+    model = AutoModelForCausalLM.from_pretrained(model_id, revision=model_revision, **build_model_types(dtype, device), trust_remote_code=trust_remote_code).eval()
     collator = DataCollatorForLanguageModeling(tokenizer, mlm=False)
 
     if peft_model_id:
@@ -79,8 +81,12 @@ def main(
        model = PeftModel.from_pretrained(model, peft_model_id, revision=peft_model_revision)
 
 
-    if getattr(tokenizer, "default_chat_template"):
-        tokenizer.chat_template = PROMPT_TEMPLATES[prompt_template or model_id]
+    if prompt_template:
+        tokenizer.chat_template = PROMPT_TEMPLATES[prompt_template]
+    elif hasattr(tokenizer, "chat_template") and tokenizer.chat_template :
+        pass
+    else:
+        tokenizer.chat_template = PROMPT_TEMPLATES[model_id]
 
     
     gen_args = dict(
@@ -128,7 +134,7 @@ def main(
 
             prompt_len = inputs['input_ids'].shape[1]
             responses = model.generate(**inputs, **gen_args).cpu()
-            # print(tokenizer.batch_decode(responses, skip_special_tokens=True))
+            print(tokenizer.batch_decode(responses, skip_special_tokens=True))
             responses = responses[:, prompt_len:]
             responses = tokenizer.batch_decode(responses, skip_special_tokens=True)
 

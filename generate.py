@@ -105,7 +105,8 @@ def main(
     dataset = DATASETS[testset]()
     with jsonlines.open(output_filename, "a") as fout:
         dataset_len = len(dataset)
-        for i in tqdm(range(0, len(dataset), batch_size), total=limit):
+        progress = tqdm(total=limit or len(dataset) // batch_size)
+        for i in range(0, len(dataset), batch_size):
             if i < skip_lines:
                 continue
             
@@ -138,6 +139,8 @@ def main(
                 item['model_args'] = model_args
                 item['gen_args'] = gen_args
                 fout.write(item)
+
+            progress.update(batch_size)
           
     
 

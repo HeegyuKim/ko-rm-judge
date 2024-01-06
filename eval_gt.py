@@ -41,10 +41,11 @@ def build_model_types(dtype: str, device: str):
 def main(
     name: str,
     reward_model_id: str,
-    filename: Optional[str] = None,
+    testset: str,
     device: str = "auto",
     batch_size: int = 1,
     dtype: str = "float16",
+    limit: Optional[int] = None,
     reward_prompt_template: Optional[str] = None,
     model_revision: Optional[str] = None,
     peft_model_id: Optional[str] = None,
@@ -76,8 +77,7 @@ def main(
     device = model.device
     reward_output_filename = os.path.join(os.path.dirname(filename), os.path.basename(filename) + f"_{name}.json")
 
-    with jsonlines.open(filename) as fin:
-        dataset = list(fin)
+    dataset = DATASETS[testset]()
 
     all_scores = []
 

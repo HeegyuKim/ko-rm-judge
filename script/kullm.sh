@@ -1,4 +1,4 @@
-model_id="nlpai-lab/kullm-polyglot-12.8b-v3"
+model_id="nlpai-lab/kullm-polyglot-5.8b-v2"
 helpful="data/$model_id/gpt4evol.json"
 safety="data/$model_id/ko-ethical-questions.json"
 batch_size=1
@@ -9,7 +9,6 @@ python generate.py \
     --testset gpt4evol \
     --batch_size $batch_size \
     --output_filename $helpful \
-    --trust_remote_code \
     --limit 100 
 
 python generate.py \
@@ -18,7 +17,6 @@ python generate.py \
     --testset ko-ethical-questions \
     --batch_size $batch_size \
     --output_filename $safety \
-    --trust_remote_code \
     --limit 100 
 
 python eval.py \

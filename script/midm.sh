@@ -3,21 +3,21 @@ helpful="data/$model_id/gpt4evol.json"
 safety="data/$model_id/ko-ethical-questions.json"
 batch_size=1
 
-python generate.py \
-    --model_id $model_id \
-    --testset gpt4evol \
-    --batch_size $batch_size \
-    --output_filename $helpful \
-    --trust_remote_code \
-    --limit 100 
+# python generate.py \
+#     --model_id $model_id \
+#     --testset gpt4evol \
+#     --batch_size $batch_size \
+#     --output_filename $helpful \
+#     --trust_remote_code \
+#     --limit 100 
 
-python generate.py \
-    --model_id $model_id \
-    --testset ko-ethical-questions \
-    --batch_size $batch_size \
-    --output_filename $safety \
-    --trust_remote_code \
-    --limit 100 
+# python generate.py \
+#     --model_id $model_id \
+#     --testset ko-ethical-questions \
+#     --batch_size $batch_size \
+#     --output_filename $safety \
+#     --trust_remote_code \
+#     --limit 100 
 
 python eval.py \
     --name helpful \

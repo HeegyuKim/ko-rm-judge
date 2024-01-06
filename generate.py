@@ -5,7 +5,12 @@ import os
 from tqdm import tqdm
 
 
-from transformers import AutoTokenizer, AutoModelForCausalLM, DataCollatorForLanguageModeling
+from transformers import (
+    AutoTokenizer,
+    AutoModelForCausalLM,
+    DataCollatorForLanguageModeling,
+    AutoConfig,
+)
 from prompt_templates import PROMPT_TEMPLATES
 from question_datasets import DATASETS
 from copy import deepcopy
@@ -14,27 +19,22 @@ import torch
 
 
 DTYPES = {
-    'float16': torch.float16,
-    'bfloat16': torch.float16,
-    'float32': torch.float32,
+    "float16": torch.float16,
+    "bfloat16": torch.float16,
+    "float32": torch.float32,
 }
 
-def build_model_types(dtype: str, device: str):
-   if dtype == "int8":
-      return {
-         "load_in_8bit": True,
-         "device_map": "auto"
-      }
-   elif dtype == "int4":
-      return {
-         "load_in_4bit": True,
-         "device_map": "auto"
-      }
-   else:
-      return {
-         'torch_dtype': DTYPES[dtype],
-         'device_map': device
-      }
+
+def build_model_types(dtype: str, device: str, parallelize: bool):
+    if parallelize:
+        return {}
+    elif dtype == "int8":
+        return {"load_in_8bit": True, "device_map": "auto"}
+    elif dtype == "int4":
+        return {"load_in_4bit": True, "device_map": "auto"}
+    else:
+        return {"torch_dtype": DTYPES[dtype], "device_map": device}
+
 
 @torch.no_grad()
 def main(
@@ -51,56 +51,67 @@ def main(
     peft_model_id: Optional[str] = None,
     peft_model_revision: Optional[str] = None,
     trust_remote_code: bool = False,
-
+    parallelize=False,
     do_sample=True,
     temperature: float = 1.0,
     top_p: float = 1.0,
     top_k: Optional[int] = None,
-    max_new_tokens: Optional[int] = 512
-    ):
-
+    max_new_tokens: Optional[int] = 512,
+):
     if output_filename is None:
-       output_filename = f"data/{testset}-" + model_id.replace("/", "__") + ".json"
+        output_filename = f"data/{testset}-" + model_id.replace("/", "__") + ".json"
 
     if os.path.exists(output_filename):
-       with jsonlines.open(output_filename) as fin:
-          skip_lines = len(list(fin))
-          print(f"파일이 이미 존재하며 {skip_lines}개가 이미 생성되어있습니다.")
+        with jsonlines.open(output_filename) as fin:
+            skip_lines = len(list(fin))
+            print(f"파일이 이미 존재하며 {skip_lines}개가 이미 생성되어있습니다.")
     else:
-       skip_lines = 0
+        skip_lines = 0
 
     if device == "auto":
-       device = "cuda:0" if torch.cuda.is_available() else "cpu"
+        device = "cuda:0" if torch.cuda.is_available() else "cpu"
 
-    tokenizer = AutoTokenizer.from_pretrained(tokenizer_id or model_id, revision=model_revision, padding_side="left", trust_remote_code=trust_remote_code)
-    model = AutoModelForCausalLM.from_pretrained(model_id, revision=model_revision, **build_model_types(dtype, device), trust_remote_code=trust_remote_code).eval()
+    tokenizer = AutoTokenizer.from_pretrained(
+        tokenizer_id or model_id,
+        revision=model_revision,
+        padding_side="left",
+        trust_remote_code=trust_remote_code,
+    )
     collator = DataCollatorForLanguageModeling(tokenizer, mlm=False)
 
-    if peft_model_id:
-       from peft import PeftModel
-       model = PeftModel.from_pretrained(model, peft_model_id, revision=peft_model_revision)
+    model = AutoModelForCausalLM.from_pretrained(
+        model_id,
+        revision=model_revision,
+        **build_model_types(dtype, device, parallelize),
+        trust_remote_code=trust_remote_code,
+    ).eval()
 
+    if peft_model_id:
+        from peft import PeftModel
+
+        model = PeftModel.from_pretrained(
+            model, peft_model_id, revision=peft_model_revision
+        )
 
     if prompt_template:
         tokenizer.chat_template = PROMPT_TEMPLATES[prompt_template]
-    elif hasattr(tokenizer, "chat_template") and tokenizer.chat_template :
+    elif hasattr(tokenizer, "chat_template") and tokenizer.chat_template:
         pass
     else:
         tokenizer.chat_template = PROMPT_TEMPLATES[model_id]
 
-    
     gen_args = dict(
         do_sample=do_sample,
         top_p=top_p,
         top_k=top_k,
         max_new_tokens=max_new_tokens,
-        temperature=temperature
+        temperature=temperature,
     )
     model_args = dict(
         model_id=model_id,
         model_revision=model_revision,
         peft_model_id=peft_model_id,
-        peft_model_revision=peft_model_revision
+        peft_model_revision=peft_model_revision,
     )
 
     dirname = os.path.dirname(output_filename)
@@ -115,24 +126,26 @@ def main(
         for i in range(0, len(dataset), batch_size):
             if i < skip_lines:
                 continue
-            
+
             if i >= limit:
                 print(f"{limit} 제한으로 중단합니다.")
                 break
-          
+
             # 우선 아이템들을 인코딩합니다.
             end_i = min(dataset_len, i + batch_size)
             input_ids = []
             for j in range(i, end_i):
                 item = dataset[j]
-                input_id = tokenizer.apply_chat_template(item["conversations"], add_generation_prompt=True)
+                input_id = tokenizer.apply_chat_template(
+                    item["conversations"], add_generation_prompt=True
+                )
                 input_ids.append(input_id)
 
             # 점수 측정
             inputs = collator(input_ids)
             inputs = {k: v.to(device) for k, v in inputs.items() if k != "labels"}
 
-            prompt_len = inputs['input_ids'].shape[1]
+            prompt_len = inputs["input_ids"].shape[1]
             responses = model.generate(**inputs, **gen_args).cpu()
             print(tokenizer.batch_decode(responses, skip_special_tokens=True))
             responses = responses[:, prompt_len:]
@@ -141,14 +154,13 @@ def main(
             # 결과 저장
             for j in range(i, end_i):
                 item = dataset[j]
-                item['response'] = responses[j - i]
-                item['model_args'] = model_args
-                item['gen_args'] = gen_args
+                item["response"] = responses[j - i]
+                item["model_args"] = model_args
+                item["gen_args"] = gen_args
                 fout.write(item)
 
             progress.update(batch_size)
-          
-    
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     fire.Fire(main)

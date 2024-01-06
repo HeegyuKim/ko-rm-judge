@@ -2,7 +2,7 @@ export CUDA_VISIBLE_DEVICES=1
 
 model_id="42dot/42dot_LLM-SFT-1.3B"
 peft="heegyu/42dot-SFT-DPO-v0.1"
-peft_rev="steps-126664"
+peft_rev="steps-189996"
 helpful="data/42dot_LLM-DPO-1.3B-$peft_rev/gpt4evol.json"
 safety="data/42dot_LLM-DPO-1.3B-$peft_rev/ko-ethical-questions.json"
 batch_size=4

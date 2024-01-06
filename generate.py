@@ -92,12 +92,24 @@ def main(
     )
     collator = DataCollatorForLanguageModeling(tokenizer, mlm=False)
 
-    model = AutoModelForCausalLM.from_pretrained(
-        model_id,
-        revision=model_revision,
-        **build_model_types(dtype, device, parallelize),
-        trust_remote_code=trust_remote_code,
-    ).eval()
+    if parallelize:
+        from accelerate import init_empty_weights, load_checkpoint_and_dispatch
+        with init_empty_weights():
+            model = AutoModelForCausalLM.from_config(AutoConfig.from_pretrained(
+                model_id,
+                revision=model_revision,
+                trust_remote_code=trust_remote_code,
+            ))
+        model = load_checkpoint_and_dispatch(
+            model, checkpoint=model_id, device_map="auto"
+        )
+    else:
+        model = AutoModelForCausalLM.from_pretrained(
+            model_id,
+            revision=model_revision,
+            **build_model_types(dtype, device, parallelize),
+            trust_remote_code=trust_remote_code,
+        ).eval()
 
     if peft_model_id:
         from peft import PeftModel
@@ -128,6 +140,7 @@ def main(
         model_revision=model_revision,
         peft_model_id=peft_model_id,
         peft_model_revision=peft_model_revision,
+        dtype=dtype,
     )
 
     dirname = os.path.dirname(output_filename)

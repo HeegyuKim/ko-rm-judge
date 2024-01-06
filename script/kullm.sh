@@ -1,6 +1,9 @@
-model_id="nlpai-lab/kullm-polyglot-5.8b-v2"
+export CUDA_VISIBLE_DEVICES=0,1
+# model_id="nlpai-lab/kullm-polyglot-5.8b-v2"
+model_id="nlpai-lab/kullm-polyglot-12.8b-v3"
 helpful="data/$model_id/gpt4evol.json"
 safety="data/$model_id/ko-ethical-questions.json"
+parallelize=True
 batch_size=1
 
 python generate.py \
@@ -9,6 +12,8 @@ python generate.py \
     --testset gpt4evol \
     --batch_size $batch_size \
     --output_filename $helpful \
+    --additional_eos '###' \
+    --parallize $parallelize \
     --limit 100 
 
 python generate.py \
@@ -17,6 +22,8 @@ python generate.py \
     --testset ko-ethical-questions \
     --batch_size $batch_size \
     --output_filename $safety \
+    --additional_eos '###' \
+    --parallize $parallelize \
     --limit 100 
 
 python eval.py \

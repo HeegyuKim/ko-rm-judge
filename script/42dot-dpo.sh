@@ -16,7 +16,6 @@ test() {
         --testset gpt4evol \
         --batch_size $batch_size \
         --output_filename $helpful \
-        --prompt_template vicuna \
         --limit 100 
 
     python generate.py \
@@ -26,7 +25,6 @@ test() {
         --testset ko-ethical-questions \
         --batch_size $batch_size \
         --output_filename $safety \
-        --prompt_template vicuna \
         --limit 100 
 
     python eval.py \

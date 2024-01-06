@@ -18,6 +18,7 @@ test() {
         --batch_size $batch_size \
         --output_filename $helpful \
         --prompt_template vicuna \
+        --additional_eos '###' \
         --limit 100 
 
     python generate.py \
@@ -28,6 +29,7 @@ test() {
         --batch_size $batch_size \
         --output_filename $safety \
         --prompt_template vicuna \
+        --additional_eos '###' \
         --limit 100 
 
     python eval.py \

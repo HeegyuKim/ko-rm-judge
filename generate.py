@@ -26,9 +26,9 @@ DTYPES = {
 }
 
 
-def build_model_types(dtype: str, device: str, parallelize: bool):
-    if parallelize:
-        return {}
+def build_model_types(dtype: str, device: str, num_gpus: int):
+    if num_gpus > 1:
+        return {"torch_dtype": DTYPES[dtype]}
     elif dtype == "int8":
         return {"load_in_8bit": True, "device_map": "auto"}
     elif dtype == "int4":
@@ -43,7 +43,7 @@ class EosListStoppingCriteria(StoppingCriteria):
     def __call__(self, input_ids: torch.LongTensor, scores: torch.FloatTensor, **kwargs) -> bool:
         for eos_sequence in self.eos_list:
             last_ids = input_ids[:,-len(eos_sequence):].tolist()
-            if self.eos_sequence in last_ids:
+            if eos_sequence in last_ids:
                 return True
         return False
 
@@ -62,7 +62,7 @@ def main(
     peft_model_id: Optional[str] = None,
     peft_model_revision: Optional[str] = None,
     trust_remote_code: bool = False,
-    parallelize=False,
+    num_gpus: int = 1,
     do_sample=True,
     temperature: float = 1.0,
     top_p: float = 1.0,
@@ -90,26 +90,19 @@ def main(
         padding_side="left",
         trust_remote_code=trust_remote_code,
     )
+    model = AutoModelForCausalLM.from_pretrained(
+        model_id,
+        revision=model_revision,
+        **build_model_types(dtype, device, num_gpus),
+        trust_remote_code=trust_remote_code,
+        low_cpu_mem_usage=True, offload_state_dict=True
+    ).eval()
     collator = DataCollatorForLanguageModeling(tokenizer, mlm=False)
 
-    if parallelize:
-        from accelerate import init_empty_weights, load_checkpoint_and_dispatch
-        with init_empty_weights():
-            model = AutoModelForCausalLM.from_config(AutoConfig.from_pretrained(
-                model_id,
-                revision=model_revision,
-                trust_remote_code=trust_remote_code,
-            ))
-        model = load_checkpoint_and_dispatch(
-            model, checkpoint=model_id, device_map="auto"
-        )
-    else:
-        model = AutoModelForCausalLM.from_pretrained(
-            model_id,
-            revision=model_revision,
-            **build_model_types(dtype, device, parallelize),
-            trust_remote_code=trust_remote_code,
-        ).eval()
+    if num_gpus > 1:
+        import tensor_parallel as tp
+        model = tp.tensor_parallel(model, [f"cuda:{i}" for i in range(num_gpus)])
+
 
     if peft_model_id:
         from peft import PeftModel
@@ -133,7 +126,7 @@ def main(
         temperature=temperature,
     )
     if additional_eos:
-        gen_args["stopping_criteria"] = EosListStoppingCriteria(tokenizer, [additional_eos])
+        gen_args["stopping_criteria"] = [EosListStoppingCriteria(tokenizer, [additional_eos])]
 
     model_args = dict(
         model_id=model_id,
@@ -149,6 +142,9 @@ def main(
 
     device = model.device
     dataset = DATASETS[testset]()
+    gen_args_save = gen_args.copy()
+    gen_args_save.pop("stopping_criteria")
+
     with jsonlines.open(output_filename, "a") as fout:
         dataset_len = len(dataset)
         progress = tqdm(total=limit or len(dataset) // batch_size)
@@ -185,10 +181,15 @@ def main(
 
             # 결과 저장
             for j in range(i, end_i):
+                r = responses[j - i]
                 item = dataset[j]
-                item["response"] = responses[j - i]
+
+                if additional_eos and additional_eos in r:
+                    r = r.split(additional_eos, 1)[0]
+                    
+                item["response"] = r
                 item["model_args"] = model_args
-                item["gen_args"] = gen_args
+                item["gen_args"] = gen_args_save
                 fout.write(item)
 
             progress.update(batch_size)

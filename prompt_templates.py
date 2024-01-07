@@ -5,6 +5,8 @@ TEMPLATE_ZEPHYR = "{% for message in messages %}\n{% if message['role'] == 'user
 TEMPLATE_MIDM = "{% for message in messages %}{% if message['role'] == 'user' %}{{ '###User;' }}{% elif message['role'] == 'assistant' %}{{ '###Midm;' }}{% endif %}{{ message['content'] + '\n' }}{% endfor %}{% if add_generation_prompt %}{{ '###Midm;\n' }}{% endif %}"
 
 TEMPLATE_KULLM_NO_INPUT = "{{ '아래는 작업을 설명하는 명령어입니다. 요청을 적절히 완료하는 응답을 작성하세요.\n\n' }}{% for message in messages %}{% if message['role'] == 'user' %}{{ '### 명령어:\n' }}{% elif message['role'] == 'assistant' %}{{ '### 응답:\n' }}{% endif %}{{ message['content'] + '\n\n' }}{% endfor %}{% if add_generation_prompt %}{{ '### 응답:\n' }}{% endif %}"
+TEMPLATE_KOALPACA = "{% for message in messages %}{% if message['role'] == 'user' %}{{ '### 질문:' }}{% elif message['role'] == 'assistant' %}{{ '### 답변:' }}{% endif %}{{ message['content'] + '\n\n' }}{% endfor %}{% if add_generation_prompt %}{{ '### 답변:' }}{% endif %}"
+TEMPLATE_CHATML = "{% for message in messages %}{% if message['role'] == 'user' %}{{ '<|im_start|>user\n' }}{% elif message['role'] == 'assistant' %}{{ '<|im_start|>assistant\n' }}{% endif %}{{ message['content'] + '<|im_end|>\n' }}{% endfor %}{% if add_generation_prompt %}{{ '<|im_start|>assistant:\n' }}{% endif %}"
 
 PROMPT_TEMPLATES = {
     "42dot": TEMPLATE_42DOT,
@@ -20,4 +22,8 @@ PROMPT_TEMPLATES = {
     "kullm-no-input": TEMPLATE_KULLM_NO_INPUT,
     "nlpai-lab/kullm-polyglot-12.8b-v3": TEMPLATE_KULLM_NO_INPUT,
     "nlpai-lab/kullm-polyglot-5.8b-v2": TEMPLATE_KULLM_NO_INPUT,
+
+    "beomi/KoAlpaca-Polyglot-12.8B": TEMPLATE_KOALPACA,
+    "beomi/KoAlpaca-Polyglot-5.8B": TEMPLATE_KOALPACA,
+    "maywell/Synatra-Yi-Ko-6B": TEMPLATE_CHATML,
 }

@@ -7,7 +7,6 @@ job() {
 
     python generate.py \
         --model_id $model_id \
-        --tokenizer_id $tokenizer \
         --testset gpt4evol \
         --batch_size $batch_size \
         --output_filename $helpful \
@@ -17,7 +16,6 @@ job() {
 
     python generate.py \
         --model_id $model_id \
-        --tokenizer_id $tokenizer \
         --testset ko-ethical-questions \
         --batch_size $batch_size \
         --output_filename $safety \
@@ -37,12 +35,11 @@ job() {
         --batch_size $batch_size \
         --filename $safety
 }
-model_id="nlpai-lab/kullm-polyglot-5.8b-v2"
-tokenizer="EleutherAI/polyglot-ko-5.8b"
-num_gpus=1
-job
 
-model_id="nlpai-lab/kullm-polyglot-12.8b-v3"
-tokenizer="EleutherAI/polyglot-ko-12.8b"
+model_id="beomi/KoAlpaca-Polyglot-12.8B"
 num_gpus=2
 job
+
+# model_id="beomi/KoAlpaca-Polyglot-5.8B"
+# num_gpus=1
+# job

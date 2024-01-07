@@ -1,4 +1,4 @@
-export CUDA_VISIBLE_DEVICES=0,1
+export CUDA_VISIBLE_DEVICES=0
 
 job() {
     helpful="data/$model_id/gpt4evol.json"
@@ -7,21 +7,19 @@ job() {
 
     python generate.py \
         --model_id $model_id \
-        --tokenizer_id $tokenizer \
         --testset gpt4evol \
         --batch_size $batch_size \
         --output_filename $helpful \
-        --additional_eos '###' \
+        --additional_eos '<|im_end|>' \
         --num_gpus $num_gpus \
         --limit 100 
 
     python generate.py \
         --model_id $model_id \
-        --tokenizer_id $tokenizer \
         --testset ko-ethical-questions \
         --batch_size $batch_size \
         --output_filename $safety \
-        --additional_eos '###' \
+        --additional_eos '<|im_end|>' \
         --num_gpus $num_gpus \
         --limit 100 
 
@@ -37,12 +35,8 @@ job() {
         --batch_size $batch_size \
         --filename $safety
 }
-model_id="nlpai-lab/kullm-polyglot-5.8b-v2"
-tokenizer="EleutherAI/polyglot-ko-5.8b"
-num_gpus=1
-job
 
-model_id="nlpai-lab/kullm-polyglot-12.8b-v3"
-tokenizer="EleutherAI/polyglot-ko-12.8b"
-num_gpus=2
+
+model_id="maywell/Synatra-Yi-Ko-6B"
+num_gpus=1
 job

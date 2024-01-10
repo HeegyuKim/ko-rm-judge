@@ -13,17 +13,33 @@ PROMPT_TEMPLATES = {
     "42dot/42dot_LLM-SFT-1.3B": TEMPLATE_42DOT,
     "heegyu/ko-reward-model-helpful-1.3b-v0.2": TEMPLATE_42DOT,
     "heegyu/ko-reward-model-safety-1.3b-v0.2": TEMPLATE_42DOT,
+    
     "vicuna": TEMPLATE_VICUNA,
     "solar": TEMPLATE_VICUNA,
+    
     "llama": TEMPLATE_LLAMA,
+    
     "zephyr": TEMPLATE_ZEPHYR,
+    
     "KT-AI/midm-bitext-S-7B-inst-v1": TEMPLATE_MIDM,
     "midm": TEMPLATE_MIDM,
+    
     "kullm-no-input": TEMPLATE_KULLM_NO_INPUT,
     "nlpai-lab/kullm-polyglot-12.8b-v3": TEMPLATE_KULLM_NO_INPUT,
     "nlpai-lab/kullm-polyglot-5.8b-v2": TEMPLATE_KULLM_NO_INPUT,
 
     "beomi/KoAlpaca-Polyglot-12.8B": TEMPLATE_KOALPACA,
     "beomi/KoAlpaca-Polyglot-5.8B": TEMPLATE_KOALPACA,
+    "kfkas/Llama-2-ko-7b-Chat": TEMPLATE_KOALPACA,
+
     "maywell/Synatra-Yi-Ko-6B": TEMPLATE_CHATML,
+}
+
+
+MTBENCH_PROMPT = {
+
+    "single-v1": "공정한 심사위원으로써 아래에 표시된 사용자의 질문에 대해 AI 어시스턴트가 제공하는 응답의 품질을 평가하세요. 평가는 응답의 유용성, 관련성, 정확성, 깊이, 창의성 및 세부 수준과 같은 요소를 고려해야 합니다. 간단한 설명을 제공하는 것으로 평가를 시작하고 가능한 객관적이어야 합니다. 설명을 제공한 후 [[rating]] 이같은 형식을 엄격하게 따라 응답을 1에서 10까지의 척도로 평가해야 합니다. 척도 예시: \"Rating: [[5]]\"",
+    "single-math-v1": "공정한 심사위원으로써 아래에 표시된 사용자 질문에 대해 AI 어시스턴트가 제공하는 응답의 품질을 평가하세요. 평가는 정확성과 유용성을 고려해야 합니다. 정답 답변과 AI 어시스턴트의 답변이 주어집니다. 둘을 비교하여 평가를 시작합니다. 오류를 식별하고 수정합니다. 가능한 객관적이어야 합니다. 설명을 제공한 후 [[rating]] 이같은 형식을 엄격하게 따라 1~10 척도로 응답을 평가해야 합니다. 예를 들어 \"Rating: [[5]]\"",
+    "single-v1-multi-turn": "공정한 심사위원으로써 아래에 표시된 사용자의 질문에 대해 AI 어시스턴트가 제공하는 응답의 품질을 평가하세요. 평가는 응답의 유용성, 관련성, 정확성, 깊이, 창의성 및 세부 수준과 같은 요소를 고려해야 합니다. 평가는 두 번째 사용자 질문에 대한 AI 어시스턴트의 대답에 초점을 맞추어야 합니다. 간단한 설명을 제공하는 것으로 평가를 시작하고 가능한 객관적이어야 합니다. 설명을 제공한 후 [[rating]] 이같은 형식을 엄격하게 따라 응답을 1에서 10까지의 척도로 평가해야 합니다. 척도 예시: \"Rating: [[5]]\"",
+    "single-math-v1-multi-turn": "공정한 심사위원으로써 아래에 표시된 사용자 질문에 대해 AI 어시스턴트가 제공하는 응답의 품질을 평가하세요. 평가는 정확성과 유용성을 고려해야 합니다. 평가는 두 번째 사용자 질문에 대한 AI 어시스턴트의 대답에 초점을 맞추어야 합니다. 정답 답변과 AI 어시스턴트의 답변이 주어집니다. 둘을 비교하여 평가를 시작합니다. 오류를 식별하고 수정합니다. 가능한 객관적이어야 합니다. 설명을 제공한 후 [[rating]] 이같은 형식을 엄격하게 따라 1~10 척도로 응답을 평가해야 합니다. 예를 들어 \"Rating: [[5]]\"",
 }

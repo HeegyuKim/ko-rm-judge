@@ -13,6 +13,18 @@ def gpt4evol():
     ds = ds.map(mapper, remove_columns=ds.column_names)
     return ds
 
+def alpacaeval_ko():
+    ds = load_dataset("heegyu/alpaca_eval_ko", split="test")
+
+    def mapper(x):
+        return {
+            "conversations": [{"role": "user", "content": x["instruction"]}],
+            "response": x["output"],
+        }
+
+    ds = ds.map(mapper, remove_columns=ds.column_names)
+    return ds
+    
 
 def pku_saferlhf_ko():
     ds = load_dataset("heegyu/PKU-SafeRLHF-ko", split="test")
@@ -43,6 +55,7 @@ def ko_ethical_questions():
 
 DATASETS = {
     "gpt4evol": gpt4evol,
+    "alpaca-eval-ko": alpacaeval_ko,
     "pku-saferlhf-ko": pku_saferlhf_ko,
     "ko-ethical-questions": ko_ethical_questions,
 }

@@ -108,7 +108,7 @@ def main(
         for i in range(0, len(dataset), batch_size):
             if i < skip_lines:
                 continue
-            if i >= limit:
+            if limit and i >= limit:
                 print(f"{limit} 제한으로 중단합니다.")
                 break
 

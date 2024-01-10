@@ -55,7 +55,7 @@ def main(
     device: str = "auto",
     batch_size: int = 1,
     dtype: str = "float16",
-    limit: Optional[int] = None,
+    limit: Optional[int] = -1,
     prompt_template: Optional[str] = None,
     model_revision: Optional[str] = None,
     tokenizer_id: Optional[str] = None,
@@ -84,12 +84,18 @@ def main(
     if device == "auto":
         device = "cuda:0" if torch.cuda.is_available() else "cpu"
 
+    if tokenizer_id is None or len(tokenizer_id.strip()) == 0:
+        tokenizer_id = model_id
+
     tokenizer = AutoTokenizer.from_pretrained(
-        tokenizer_id or model_id,
+        tokenizer_id,
         revision=model_revision,
         padding_side="left",
         trust_remote_code=trust_remote_code,
     )
+    if tokenizer.pad_token_id is None:
+        tokenizer.pad_token_id = tokenizer.eos_token_id
+        
     model = AutoModelForCausalLM.from_pretrained(
         model_id,
         revision=model_revision,
@@ -143,16 +149,17 @@ def main(
     device = model.device
     dataset = DATASETS[testset]()
     gen_args_save = gen_args.copy()
-    gen_args_save.pop("stopping_criteria")
+    if additional_eos:
+        gen_args_save.pop("stopping_criteria")
 
     with jsonlines.open(output_filename, "a") as fout:
         dataset_len = len(dataset)
-        progress = tqdm(total=limit or len(dataset) // batch_size)
+        progress = tqdm(total=limit if limit > 0 else len(dataset))
         for i in range(0, len(dataset), batch_size):
             if i < skip_lines:
                 continue
 
-            if i >= limit:
+            if limit > 0 and i >= limit:
                 print(f"{limit} 제한으로 중단합니다.")
                 break
 

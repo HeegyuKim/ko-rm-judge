@@ -4,7 +4,6 @@ import jsonlines
 import os
 from tqdm import tqdm
 import numpy as np
-from glob import glob
 
 
 from transformers import (
@@ -45,7 +44,6 @@ def clean_text(text):
 def main(
     name: str,
     reward_model_id: str,
-    filename: Optional[str] = None,
     device: str = "auto",
     batch_size: int = 1,
     dtype: str = "float16",
@@ -56,8 +54,6 @@ def main(
 ):
     if device == "auto":
         device = "cuda:0" if torch.cuda.is_available() else "cpu"
-    else:
-        print(device)
 
     tokenizer = AutoTokenizer.from_pretrained(reward_model_id, revision=model_revision)
     model = AutoModelForSequenceClassification.from_pretrained(
@@ -85,10 +81,7 @@ def main(
     )
 
     device = model.device
-    files = list(glob(filename, recursive=True))
-    print("evaluation targets:", files)
-    
-    def eval_rewards(filename):
+    def eval_reward_and_save(filename):
         dirname = os.path.dirname(filename)
         basename = os.path.basename(filename)
         reward_output_filename = os.path.join(
@@ -97,11 +90,6 @@ def main(
 
         with jsonlines.open(filename) as fin:
             dataset = list(fin)
-            dataset_len = len(dataset)
-
-            if len(dataset) == 0 or "score" in dataset[0]:
-                print(f"pass {filename}")
-                return
 
         all_scores = []
 
@@ -110,16 +98,14 @@ def main(
                 evaluated_items = list(fin)
                 skip_lines = len(evaluated_items)
                 all_scores = [x["score"] for x in evaluated_items]
-                if skip_lines >= dataset_len:
-                    print(f"pass {filename}")
-                    return
                 print(f"파일이 이미 존재하며 {skip_lines}개가 이미 평가되어있습니다.")
         else:
             skip_lines = 0
             all_scores = []
 
         with jsonlines.open(reward_output_filename, "a") as fout:
-            progress = tqdm(total=skip_lines // batch_size, desc=filename)
+            dataset_len = len(dataset)
+            progress = tqdm(total=len(dataset) // batch_size)
             for i in range(0, len(dataset), batch_size):
                 if i < skip_lines:
                     continue
@@ -158,9 +144,6 @@ def main(
         print("average score:", np.mean(all_scores))
         print("average std:", np.std(all_scores))
 
-
-    for file in files:
-        eval_rewards(file)
 
 if __name__ == "__main__":
     fire.Fire(main)

@@ -20,8 +20,8 @@
 
 #### 샘플링 하이퍼파라미터
 ```
-top_p: 1.0
-top_k: none
+top_p: 0.95
+top_k: 50
 temperature: 1.0
 max_new_tokens: 512
 ```

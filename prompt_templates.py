@@ -7,6 +7,7 @@ TEMPLATE_MIDM = "{% for message in messages %}{% if message['role'] == 'user' %}
 TEMPLATE_KULLM_NO_INPUT = "{{ '아래는 작업을 설명하는 명령어입니다. 요청을 적절히 완료하는 응답을 작성하세요.\n\n' }}{% for message in messages %}{% if message['role'] == 'user' %}{{ '### 명령어:\n' }}{% elif message['role'] == 'assistant' %}{{ '### 응답:\n' }}{% endif %}{{ message['content'] + '\n\n' }}{% endfor %}{% if add_generation_prompt %}{{ '### 응답:\n' }}{% endif %}"
 TEMPLATE_KOALPACA = "{% for message in messages %}{% if message['role'] == 'user' %}{{ '### 질문:' }}{% elif message['role'] == 'assistant' %}{{ '### 답변:' }}{% endif %}{{ message['content'] + '\n\n' }}{% endfor %}{% if add_generation_prompt %}{{ '### 답변:' }}{% endif %}"
 TEMPLATE_CHATML = "{% for message in messages %}{% if message['role'] == 'user' %}{{ '<|im_start|>user\n' }}{% elif message['role'] == 'assistant' %}{{ '<|im_start|>assistant\n' }}{% endif %}{{ message['content'] + '<|im_end|>\n' }}{% endfor %}{% if add_generation_prompt %}{{ '<|im_start|>assistant:\n' }}{% endif %}"
+TEMPLATE_GEMMA = "<bos>{% if messages[0]['role'] == 'system' %}{{ raise_exception('System role not supported') }}{% endif %}{% for message in messages %}{% if (message['role'] == 'user') != (loop.index0 % 2 == 0) %}{{ raise_exception('Conversation roles must alternate user/assistant/user/assistant/...') }}{% endif %}{% if (message['role'] == 'assistant') %}{% set role = 'model' %}{% else %}{% set role = message['role'] %}{% endif %}{{ '<start_of_turn>' + role + '\n' + message['content'] | trim + '<end_of_turn>\n' }}{% endfor %}{% if add_generation_prompt %}{{'<start_of_turn>model\n'}}{% endif %}"
 
 PROMPT_TEMPLATES = {
     "42dot": TEMPLATE_42DOT,
@@ -33,6 +34,8 @@ PROMPT_TEMPLATES = {
     "kfkas/Llama-2-ko-7b-Chat": TEMPLATE_KOALPACA,
 
     "maywell/Synatra-Yi-Ko-6B": TEMPLATE_CHATML,
+    "google/gemma-2b-it": TEMPLATE_GEMMA,
+    "google/gemma-7b-it": TEMPLATE_GEMMA,
 }
 
 

@@ -21,7 +21,7 @@ import torch
 
 DTYPES = {
     "float16": torch.float16,
-    "bfloat16": torch.float16,
+    "bfloat16": torch.bfloat16,
     "float32": torch.float32,
 }
 
@@ -180,7 +180,7 @@ def main(
             prompt_len = inputs["input_ids"].shape[1]
             responses = model.generate(**inputs, **gen_args).cpu()
             if print_generation:
-                for full_output in tokenizer.batch_decode(responses, skip_special_tokens=True):
+                for full_output in tokenizer.batch_decode(responses, skip_special_tokens=False):
                     print(full_output)
 
             responses = responses[:, prompt_len:]
